@@ -1,0 +1,6 @@
+(executable
+ (public_name TuringMachine)
+ (name main)
+ (flags (:standard -open Core -open TuringMachineLib))
+ (libraries core TuringMachineLib)
+ (preprocess (pps ppx_compare ppx_jane)))
