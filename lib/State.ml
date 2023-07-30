@@ -12,22 +12,27 @@ type state = machine_state * Tape.tape_symbol [@@deriving equal, sexp]
 type overall_state = state * Tape.tape * Head.head_pos [@@deriving equal]
 
 (* (new_machine_state, new_symbol, head_movement) *)
-type instruction = machine_state * Tape.tape_symbol * Head.head_movement [@@deriving sexp]
+type instruction = Instruction of machine_state * Tape.tape_symbol * Head.head_movement | No_op
+[@@deriving equal, sexp]
 
-type transition = state * instruction [@@deriving sexp]
+type transition = state * instruction [@@deriving equal, sexp]
 
-type transition_table = transition list [@@deriving sexp]
+type transition_table = transition list [@@deriving equal, sexp]
 
 let select_instruction (((current_state, current_tape_symbol), _, _) : overall_state)
     transition_table : instruction =
   List.Assoc.find_exn transition_table ~equal:equal_state (current_state, current_tape_symbol)
 
 
-let transition ((_, old_tape, old_head_pos) : overall_state)
-    ((new_state, new_symbol, head_movement) : instruction) : overall_state =
-  ( (new_state, new_symbol)
-  , Head.update_tape old_tape old_head_pos new_symbol
-  , Head.move_head old_head_pos head_movement )
+let transition ((_, old_tape, old_head_pos) as old_state : overall_state) (instruction : instruction)
+    : overall_state =
+  match instruction with
+  | No_op ->
+      old_state
+  | Instruction (new_state, new_symbol, head_movement) ->
+      ( (new_state, new_symbol)
+      , Head.update_tape old_tape old_head_pos new_symbol
+      , Head.move_head old_head_pos head_movement )
 
 
 let read_transition_table (path : string) : transition =
