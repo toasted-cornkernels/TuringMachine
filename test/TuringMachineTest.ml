@@ -113,5 +113,13 @@ end
 module Notebook4 = struct
   let goal = "Making `continuous_transition` function"
 
+  let instruction_is_noop : instruction -> bool = function No_op -> true | _ -> false
+
+  let transition_is_noop ((machine_state, _) : transition) (transition_table : transition_table) =
+    instruction_is_noop @@ List.Assoc.find_exn ~equal:equal_state transition_table machine_state
+
+
+  (* TODO: Make instruction and transition their own modules *)
+
   let _ = "end"
 end
