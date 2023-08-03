@@ -23,19 +23,19 @@ module Notebook1 = struct
 end
 
 module Notebook2 = struct
-  let sample_state : state = (State "p0", Zero)
+  let sample_state : State.t = (State "p0", Zero)
 
-  let raw_sexp_sample = sexp_of_state sample_state
+  let raw_sexp_sample : Sexp.t = State.to_sexp sample_state
 
   let sexp_sample_str = Sexp.to_string_hum ~indent:2 raw_sexp_sample (* ((State p0) Zero) *)
 
   (* ^ Don't use `string_of_sexp`! *)
 
-  let _ = state_of_sexp raw_sexp_sample
+  let _ = State.of_sexp raw_sexp_sample
 
-  let sample_transition : transition = ((State "p0", Zero), Instruction (State "p1", One, Right))
+  let sample_transition : Transition.t = ((State "p0", Zero), Instruction (State "p1", One, Right))
 
-  let raw_sexp_sample = sample_transition |> sexp_of_transition |> Sexp.to_string_hum ~indent:2
+  let raw_sexp_sample = sample_transition |> Transition.to_sexp |> Sexp.to_string_hum ~indent:2
   (* (((State p0) Zero) ((State p1) One Right)) *)
 
   let _ = "end"
@@ -47,13 +47,13 @@ module Notebook3 = struct
   (* type state = machine_state * Tape.tape_symbol [@@deriving equal, sexp] *)
   (* type transition = state * instruction [@@deriving sexp] *)
 
-  let transition_table : transition_table =
+  let transition_table : TransitionTable.t =
     [ ((State "q0", Zero), Instruction (State "q0", Zero, Right))
     ; ((State "q0", One), Instruction (State "q0", One, Right))
     ; ((State "q0", Blank), Instruction (State "a0", Blank, Left))
-    ; ((State "q1", Zero), No_op)
-    ; ((State "q1", One), No_op)
-    ; ((State "q1", Blank), No_op)
+    ; ((State "q1", Zero), Halt)
+    ; ((State "q1", One), Halt)
+    ; ((State "q1", Blank), Halt)
     ; ((State "a0", Zero), Instruction (State "s0", Blank, Left))
     ; ((State "a0", One), Instruction (State "s1", Blank, Left))
     ; ((State "a0", Blank), Instruction (State "q1", Blank, Neutral))
@@ -70,7 +70,7 @@ module Notebook3 = struct
     ; ((State "s2", One), Instruction (State "a1", Blank, Left)) ]
 
 
-  let str = Sexp.to_string_hum ~indent:4 @@ sexp_of_transition_table transition_table
+  let str = Sexp.to_string_hum ~indent:4 @@ TransitionTable.to_sexp transition_table
 
   let _ = Out_channel.print_endline str
 
@@ -78,8 +78,8 @@ module Notebook3 = struct
   let _ =
     (* Good! *)
     assert (
-      List.equal equal_transition
-        (transition_table |> sexp_of_transition_table |> transition_table_of_sexp)
+      List.equal Transition.equal
+        (transition_table |> TransitionTable.to_sexp |> TransitionTable.of_sexp)
         transition_table )
 
 
@@ -113,10 +113,33 @@ end
 module Notebook4 = struct
   let goal = "Making `continuous_transition` function"
 
-  let instruction_is_noop : instruction -> bool = function No_op -> true | _ -> false
+  let instruction_is_noop : Instruction.t -> bool = function Halt -> true | _ -> false
 
-  let transition_is_noop ((machine_state, _) : transition) (transition_table : transition_table) =
-    instruction_is_noop @@ List.Assoc.find_exn ~equal:equal_state transition_table machine_state
+  let transition_is_noop ((machine_state, _) : Transition.t) (transition_table : TransitionTable.t)
+      =
+    instruction_is_noop @@ List.Assoc.find_exn ~equal:State.equal transition_table machine_state
+
+
+  let sample_transition : Transition.t =
+    Transition.of_sexp @@ Sexp.of_string {|(((State s1) Zero) (Instruction (State a1) Blank Left))|}
+
+
+  let _ = transition_is_noop sample_transition Notebook3.transition_table
+
+  let noop_transition : Transition.t =
+    Transition.of_sexp @@ Sexp.of_string {|(((State q1) Zero) No_op)|}
+
+
+  let _ = transition_is_noop noop_transition Notebook3.transition_table
+
+  (* Works pretty well! *)
+
+  (* TODO: Change `No_op` to `Halt` *)
+
+  (** Continuously transition from a current state until the machine halts. *)
+  let rec continuous_transition (current_state : OverallState.t)
+      (transition_table : TransitionTable.t) : OverallState.t =
+    raise TODO
 
 
   (* TODO: Make instruction and transition their own modules *)
