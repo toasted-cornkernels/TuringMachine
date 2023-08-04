@@ -134,8 +134,6 @@ module Notebook4 = struct
 
   (* Works pretty well! *)
 
-  (* TODO: Change `No_op` to `Halt` *)
-
   (** Continuously transition from a current state until the machine halts. *)
   let rec continuous_transition (current_state : OverallState.t)
       (transition_table : TransitionTable.t) : OverallState.t =
