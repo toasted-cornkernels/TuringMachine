@@ -1,3 +1,5 @@
+open Tape
+open Head
 module F = Format
 
 exception TODO
@@ -17,23 +19,23 @@ end
 
 (** The current configuration of machine and tape *)
 module State = struct
-  type t = MachineState.t * Tape.tape_symbol [@@deriving equal, sexp]
+  type t = MachineState.t * TapeSymbol.t [@@deriving equal, sexp]
 
   let to_sexp = sexp_of_t
 
   let of_sexp = t_of_sexp
 
   let to_string ((machine_state, tape_symbol) : t) =
-    F.asprintf "(%s, %s)" (MachineState.to_string machine_state) (Tape.to_string tape_symbol)
+    F.asprintf "(%s, %s)" (MachineState.to_string machine_state) (TapeSymbol.to_string tape_symbol)
 end
 
 (** The current (current_state, current_tape, current_head_pos) *)
 module OverallState = struct
-  type t = State.t * Tape.tape * Head.head_pos [@@deriving equal]
+  type t = State.t * Tape.t * HeadPosition.t [@@deriving equal]
 end
 
 module Instruction = struct
-  type t = Instruction of MachineState.t * Tape.tape_symbol * Head.head_movement | Halt
+  type t = Instruction of (MachineState.t * TapeSymbol.t * HeadMovement.t) | Halt
   [@@deriving equal, sexp]
 
   let is_halt : t -> bool = function Halt -> true | _ -> false
@@ -48,7 +50,8 @@ module Instruction = struct
     | Instruction (machine_state, tape_symbol, movement) ->
         F.asprintf "(%s, %s, %s)"
           (MachineState.to_string machine_state)
-          (Tape.to_string tape_symbol) movement
+          (TapeSymbol.to_string tape_symbol)
+          (HeadMovement.to_string movement)
 end
 
 module Transition = struct
@@ -87,4 +90,4 @@ let transition ((_, old_tape, old_head_pos) as old_state : OverallState.t)
   | Instruction (new_state, new_symbol, head_movement) ->
       ( (new_state, new_symbol)
       , Head.update_tape old_tape old_head_pos new_symbol
-      , Head.move_head old_head_pos head_movement )
+      , HeadMovement.move_head old_head_pos head_movement )
