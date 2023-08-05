@@ -137,10 +137,28 @@ module Notebook4 = struct
   (** Continuously transition from a current state until the machine halts. *)
   let rec continuous_transition (current_state : OverallState.t)
       (transition_table : TransitionTable.t) : OverallState.t =
-    raise TODO
+    match select_instruction current_state transition_table with
+    | Halt ->
+        current_state
+    | Instruction (_, _, _) as instr ->
+        continuous_transition (transition current_state instr) transition_table
 
 
-  (* TODO: Make instruction and transition their own modules *)
+  let sample_transition_table : TransitionTable.t =
+    [ ((State "p0", Zero), Instruction (State "p1", Zero, Right))
+    ; ((State "p1", Zero), Instruction (State "p2", Zero, Right))
+    ; ((State "p2", Zero), Instruction (State "p3", Zero, Right))
+    ; ((State "p3", Zero), Halt) ]
+
+
+  let sample_current_state : OverallState.t =
+    ((State "p0", Zero), [Zero; Zero; Zero; Zero; Zero], Head_at 0)
+
+
+  (* TODO: Make to_string for each module *)
 
   let _ = "end"
 end
+
+(* TODO: *)
+(* TODO: *)

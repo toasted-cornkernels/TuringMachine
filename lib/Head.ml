@@ -4,7 +4,9 @@ exception TODO
 
 exception InvalidState
 
-type head_pos = Head_at of int [@@deriving equal]
+module HeadPosition = struct
+  type head_pos = Head_at of int [@@deriving equal]
+end
 
 type head_movement = Left | Right | Neutral [@@deriving equal, sexp]
 

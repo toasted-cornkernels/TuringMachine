@@ -1,3 +1,5 @@
+module F = Format
+
 exception TODO
 
 exception SexpParseError
@@ -9,6 +11,8 @@ module MachineState = struct
   let to_sexp = sexp_of_t
 
   let of_sexp = t_of_sexp
+
+  let to_string (State str) = F.asprintf "State %s" str
 end
 
 (** The current configuration of machine and tape *)
@@ -18,6 +22,9 @@ module State = struct
   let to_sexp = sexp_of_t
 
   let of_sexp = t_of_sexp
+
+  let to_string ((machine_state, tape_symbol) : t) =
+    F.asprintf "(%s, %s)" (MachineState.to_string machine_state) (Tape.to_string tape_symbol)
 end
 
 (** The current (current_state, current_tape, current_head_pos) *)
@@ -34,6 +41,14 @@ module Instruction = struct
   let to_sexp = sexp_of_t
 
   let of_sexp = t_of_sexp
+
+  let to_string = function
+    | Halt ->
+        "Halt"
+    | Instruction (machine_state, tape_symbol, movement) ->
+        F.asprintf "(%s, %s, %s)"
+          (MachineState.to_string machine_state)
+          (Tape.to_string tape_symbol) movement
 end
 
 module Transition = struct
