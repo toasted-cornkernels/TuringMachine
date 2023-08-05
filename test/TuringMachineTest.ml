@@ -5,7 +5,7 @@ open Head
 open InfixOperator
 
 module Notebook1 = struct
-  let tape = [Zero; One; Zero; One]
+  let tape : Tape.t = [Zero; One; Zero; One]
 
   let state = (tape, 3)
 
@@ -155,10 +155,11 @@ module Notebook4 = struct
     ((State "p0", Zero), [Zero; Zero; Zero; Zero; Zero], Head_at 0)
 
 
-  (* TODO: Make to_string for each module *)
+  (* TODO: Debug `continuous_transition` *)
 
   let _ = "end"
 end
 
-(* TODO: *)
-(* TODO: *)
+(* TODO 1: GraphViz representation of transitiontable.t *)
+(* TODO 2: If List.Assoc.find_exn fails, then treat it as halt *)
+(* TODO 3: Tape extending functionality (in both directions) to simulate infinite tape *)
