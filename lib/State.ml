@@ -8,7 +8,7 @@ exception SexpParseError
 
 (** Turing machine's state *)
 module MachineState = struct
-  type t = State of string [@@deriving equal, sexp]
+  type t = State of string [@@deriving equal, compare, sexp]
 
   let to_sexp = sexp_of_t
 

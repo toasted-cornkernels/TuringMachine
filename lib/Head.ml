@@ -15,7 +15,7 @@ module HeadPosition = struct
 end
 
 module HeadMovement = struct
-  type t = Left | Right | Neutral [@@deriving equal, sexp]
+  type t = Left | Right | Neutral [@@deriving equal, compare, sexp]
 
   let is_left = function Left -> true | _ -> false
 

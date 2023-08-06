@@ -1,7 +1,7 @@
 open InfixOperator
 
 module TapeSymbol = struct
-  type t = Zero | One | Blank [@@deriving equal, sexp]
+  type t = Zero | One | Blank [@@deriving equal, compare, sexp]
 
   let is_zero = function Zero -> true | _ -> false
 

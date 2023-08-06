@@ -5,5 +5,5 @@
 (library
  (name TuringMachineLib)
  (flags (:standard -open Core))
- (libraries core)
+ (libraries core ocamlgraph)
  (preprocess (pps ppx_compare ppx_jane)))

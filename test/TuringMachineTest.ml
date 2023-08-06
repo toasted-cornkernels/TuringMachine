@@ -3,6 +3,9 @@ open Tape
 open State
 open Head
 open InfixOperator
+module BiDiGraph = Graph.Persistent.Digraph.ConcreteBidirectionalLabeled
+
+exception TODO
 
 module Notebook1 = struct
   let tape : Tape.t = [Zero; One; Zero; One]
@@ -74,13 +77,13 @@ module Notebook3 = struct
 
   let _ = Out_channel.print_endline str
 
-  (* Sanity check: serializing then deserializing shouldn't affect the content *)
   let _ =
-    (* Good! *)
+    (* Sanity check: serializing then deserializing shouldn't affect the content *)
     assert (
       List.equal Transition.equal
         (transition_table |> TransitionTable.to_sexp |> TransitionTable.of_sexp)
-        transition_table )
+        transition_table ) ;
+    Out_channel.output_string Out_channel.stdout "Good!\n"
 
 
   let result =
@@ -121,13 +124,14 @@ module Notebook4 = struct
 
 
   let sample_transition : Transition.t =
-    Transition.of_sexp @@ Sexp.of_string {|(((State s1) Zero) (Instruction (State a1) Blank Left))|}
+    Transition.of_sexp
+    @@ Sexp.of_string {|(((State s1) Zero) (Instruction ((State a1) Blank Left)))|}
 
 
   let _ = transition_is_noop sample_transition Notebook3.transition_table
 
   let noop_transition : Transition.t =
-    Transition.of_sexp @@ Sexp.of_string {|(((State q1) Zero) No_op)|}
+    Transition.of_sexp @@ Sexp.of_string {|(((State q1) Zero) Halt)|}
 
 
   let _ = transition_is_noop noop_transition Notebook3.transition_table
@@ -157,9 +161,73 @@ module Notebook4 = struct
 
   (* TODO: Debug `continuous_transition` *)
 
+  let _ = continuous_transition sample_current_state sample_transition_table
+
+  let missing_transition_table : TransitionTable.t =
+    [ ((State "p0", Zero), Instruction (State "p1", Zero, Right))
+    ; ((State "p1", Zero), Instruction (State "p2", Zero, Right))
+    ; ((State "p2", Zero), Instruction (State "p3", Zero, Right)) ]
+
+
+  let _ = continuous_transition sample_current_state missing_transition_table
+
+  let select_instruction (((current_state, current_tape_symbol), _, _) : OverallState.t)
+      transition_table : Instruction.t option =
+    List.Assoc.find transition_table ~equal:State.equal (current_state, current_tape_symbol)
+
+
+  (** Continuously transition from a current state until the machine halts. *)
+  let rec continuous_transition (current_state : OverallState.t)
+      (transition_table : TransitionTable.t) : OverallState.t =
+    match select_instruction current_state transition_table with
+    | Some instruction -> (
+      match instruction with
+      | Halt ->
+          current_state
+      | Instruction (_, _, _) as instr ->
+          continuous_transition (transition current_state instr) transition_table )
+    | None ->
+        (* Equate it with Halt *)
+        current_state
+
+
+  let _ = continuous_transition sample_current_state missing_transition_table
+
   let _ = "end"
 end
 
-(* TODO 1: GraphViz representation of transitiontable.t *)
-(* TODO 2: If List.Assoc.find_exn fails, then treat it as halt *)
-(* TODO 3: Tape extending functionality (in both directions) to simulate infinite tape *)
+module Notebook5 = struct
+  let goal = "Add ocamlgraph representation"
+
+  module Vertex : Graph.Sig.COMPARABLE = struct
+    type t = MachineState.t
+
+    let compare = MachineState.compare
+
+    let hash = Hashtbl.hash
+
+    let equal = MachineState.equal
+  end
+
+  module EdgeLabel : Graph.Sig.ORDERED_TYPE_DFT = struct
+    (* The edge label is the pair of (current symbol, new symbol, head movement) *)
+    type t = TapeSymbol.t * TapeSymbol.t * HeadMovement.t [@@deriving equal, compare]
+
+    let default : t = (Zero, Zero, Left)
+  end
+
+  module StateDiagram = BiDiGraph (Vertex) (EdgeLabel)
+
+  let _ = "end"
+end
+
+module Notebook6 = struct
+  let goal = "Support graphviz representation"
+
+  let _ = "end"
+end
+
+(* DONE 1: Ocamlgraph representation of transitiontable.t *)
+(* TODO 2: GraphViz representation of transitiontable.t *)
+(* DONE 3: If List.Assoc.find_exn fails, then treat it as halt *)
+(* TODO 4: Tape extending functionality (in both directions) to simulate infinite tape *)

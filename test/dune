@@ -5,5 +5,5 @@
 (test
  (name TuringMachineTest)
  (flags (:standard -open Core -open TuringMachineLib))
- (libraries core TuringMachineLib)
+ (libraries TuringMachineLib core ocamlgraph)
  (preprocess (pps ppx_compare ppx_jane)))
