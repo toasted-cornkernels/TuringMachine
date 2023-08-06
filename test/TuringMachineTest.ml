@@ -221,8 +221,49 @@ module Notebook5 = struct
   let _ = "end"
 end
 
+module Vertex : Graph.Sig.COMPARABLE = struct
+  type t = MachineState.t
+
+  let compare = MachineState.compare
+
+  let hash = Hashtbl.hash
+
+  let equal = MachineState.equal
+end
+
+module EdgeLabel : Graph.Sig.ORDERED_TYPE_DFT = struct
+  (* The edge label is the pair of (current symbol, new symbol, head movement) *)
+  type t = TapeSymbol.t * TapeSymbol.t * HeadMovement.t [@@deriving equal, compare]
+
+  let default : t = (Zero, Zero, Left)
+end
+
+module StateDiagram = BiDiGraph (Vertex) (EdgeLabel)
+
 module Notebook6 = struct
   let goal = "Support graphviz representation"
+
+  module StateDiagram = BiDiGraph (Vertex) (EdgeLabel)
+
+  let graph_attributes (g : StateDiagram.t) = raise TODO
+
+  let default_vertex_attributes _ = []
+
+  let vertex_name (vertex : StateDiagram.V.t) = raise TODO
+
+  let vertex_attributes (vertex : StateDiagram.V.t) = raise TODO
+
+  let get_subgraph _ = None
+
+  let default_edge_attributes _ = []
+
+  let edge_attributes ((_, label, _) : StateDiagram.E.t) = raise TODO
+
+  let pp_vertex = vertex_name
+
+  let pp_edge ((v1, v2) : StateDiagram.V.t * StateDiagram.V.t) =
+    F.asprintf "\"(%s, %s)\"" (vertex_name v1) (vertex_name v2)
+
 
   let _ = "end"
 end
