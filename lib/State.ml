@@ -4,7 +4,7 @@ module F = Format
 
 exception TODO
 
-exception SexpParseError
+exception SexpParseError of string
 
 (** Turing machine's state *)
 module MachineState = struct
@@ -14,7 +14,7 @@ module MachineState = struct
 
   let of_sexp = t_of_sexp
 
-  let to_string (State str) = F.asprintf "State %s" str
+  let to_string (State str : t) = F.asprintf "State %s" str
 end
 
 (** The current configuration of machine and tape *)
@@ -54,15 +54,22 @@ module Instruction = struct
           (HeadMovement.to_string movement)
 end
 
-module Transition = struct
+module rec Transition : sig
+  type t = State.t * Instruction.t [@@deriving equal, sexp]
+end = struct
   type t = State.t * Instruction.t [@@deriving equal, sexp]
 
   let to_sexp = sexp_of_t
 
   let of_sexp = t_of_sexp
+
+  let leads_to_halt ((machine_state, _) : t) (transition_table : TransitionTable.t) =
+    Instruction.is_halt @@ List.Assoc.find_exn ~equal:State.equal transition_table machine_state
 end
 
-module TransitionTable = struct
+and TransitionTable : sig
+  type t = Transition.t list [@@deriving equal, sexp]
+end = struct
   type t = Transition.t list [@@deriving equal, sexp]
 
   let to_sexp = sexp_of_t
@@ -74,7 +81,7 @@ module TransitionTable = struct
     | Done (res, _) ->
         of_sexp res
     | Cont _ ->
-        raise SexpParseError
+        raise @@ SexpParseError (F.asprintf "Sexp parse failed: %s" path)
 end
 
 let select_instruction (((current_state, current_tape_symbol), _, _) : OverallState.t)

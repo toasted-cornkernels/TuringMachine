@@ -116,11 +116,10 @@ end
 module Notebook4 = struct
   let goal = "Making `continuous_transition` function"
 
-  let instruction_is_noop : Instruction.t -> bool = function Halt -> true | _ -> false
+  let instruction_is_halt : Instruction.t -> bool = function Halt -> true | _ -> false
 
-  let transition_is_noop ((machine_state, _) : Transition.t) (transition_table : TransitionTable.t)
-      =
-    instruction_is_noop @@ List.Assoc.find_exn ~equal:State.equal transition_table machine_state
+  let leads_to_halt ((machine_state, _) : Transition.t) (transition_table : TransitionTable.t) =
+    instruction_is_halt @@ List.Assoc.find_exn ~equal:State.equal transition_table machine_state
 
 
   let sample_transition : Transition.t =
@@ -128,13 +127,13 @@ module Notebook4 = struct
     @@ Sexp.of_string {|(((State s1) Zero) (Instruction ((State a1) Blank Left)))|}
 
 
-  let _ = transition_is_noop sample_transition Notebook3.transition_table
+  let _ = leads_to_halt sample_transition Notebook3.transition_table
 
-  let noop_transition : Transition.t =
+  let halt_transition : Transition.t =
     Transition.of_sexp @@ Sexp.of_string {|(((State q1) Zero) Halt)|}
 
 
-  let _ = transition_is_noop noop_transition Notebook3.transition_table
+  let _ = leads_to_halt halt_transition Notebook3.transition_table
 
   (* Works pretty well! *)
 
@@ -200,13 +199,9 @@ module Notebook5 = struct
   let goal = "Add ocamlgraph representation"
 
   module Vertex : Graph.Sig.COMPARABLE = struct
-    type t = MachineState.t
-
-    let compare = MachineState.compare
+    include MachineState
 
     let hash = Hashtbl.hash
-
-    let equal = MachineState.equal
   end
 
   module EdgeLabel : Graph.Sig.ORDERED_TYPE_DFT = struct
@@ -222,13 +217,9 @@ module Notebook5 = struct
 end
 
 module Vertex : Graph.Sig.COMPARABLE = struct
-  type t = MachineState.t
-
-  let compare = MachineState.compare
+  include MachineState
 
   let hash = Hashtbl.hash
-
-  let equal = MachineState.equal
 end
 
 module EdgeLabel : Graph.Sig.ORDERED_TYPE_DFT = struct
@@ -240,16 +231,17 @@ end
 
 module StateDiagram = BiDiGraph (Vertex) (EdgeLabel)
 
+(* WORKING *)
 module Notebook6 = struct
   let goal = "Support graphviz representation"
 
   module StateDiagram = BiDiGraph (Vertex) (EdgeLabel)
 
-  let graph_attributes (g : StateDiagram.t) = raise TODO
+  let graph_attributes (g : StateDiagram.t) = [`Label "I am a Turing Machine"]
 
   let default_vertex_attributes _ = []
 
-  let vertex_name (vertex : StateDiagram.V.t) = raise TODO
+  let vertex_name (vertex : StateDiagram.V.t) = Vertex.to_string vertex
 
   let vertex_attributes (vertex : StateDiagram.V.t) = raise TODO
 
