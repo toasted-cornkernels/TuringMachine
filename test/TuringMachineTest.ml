@@ -262,7 +262,8 @@ module Notebook6 = struct
   let _ = "end"
 end
 
-(* DONE 1: Ocamlgraph representation of transitiontable.t *)
-(* TODO 2: GraphViz representation of transitiontable.t *)
-(* DONE 3: If List.Assoc.find_exn fails, then treat it as halt *)
+(* DONE 1: Ocamlgraph representation of TransitionTable.t *)
+(* TODO 2: GraphViz representation of TransitionTable.t *)
+(* DONE 3: If List.Assoc.find_exn fails, then treat it as halt
+   --> implemented by opting for List.Assoc.find and case splitting between Some and None *)
 (* TODO 4: Tape extending functionality (in both directions) to simulate infinite tape *)
