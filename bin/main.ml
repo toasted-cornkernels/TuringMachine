@@ -2,8 +2,8 @@ open Tape
 open State
 
 let main () =
-  let tape = [Zero; One; Zero; One] in
-  let tape_string = string_of_tape tape in
+  let tape : Tape.t = [Zero; One; Zero; One] in
+  let tape_string = Tape.to_string tape in
   print_endline tape_string
 
 
