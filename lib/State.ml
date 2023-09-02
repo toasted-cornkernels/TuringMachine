@@ -56,6 +56,12 @@ end
 
 module rec Transition : sig
   type t = State.t * Instruction.t [@@deriving equal, sexp]
+
+  val to_sexp : t -> Sexp.t
+
+  val of_sexp : Sexp.t -> t
+
+  val leads_to_halt : t -> TransitionTable.t -> bool
 end = struct
   type t = State.t * Instruction.t [@@deriving equal, sexp]
 
@@ -69,6 +75,12 @@ end
 
 and TransitionTable : sig
   type t = Transition.t list [@@deriving equal, sexp]
+
+  val to_sexp : t -> Sexp.t
+
+  val of_sexp : Sexp.t -> t
+
+  val read_from_path : string -> t
 end = struct
   type t = Transition.t list [@@deriving equal, sexp]
 
@@ -76,7 +88,7 @@ end = struct
 
   let of_sexp = t_of_sexp
 
-  let read_transition_table (path : string) : t =
+  let read_from_path (path : string) : t =
     match Sexp.parse @@ In_channel.read_all path with
     | Done (res, _) ->
         of_sexp res
@@ -85,10 +97,11 @@ end = struct
 end
 
 let select_instruction (((current_state, current_tape_symbol), _, _) : OverallState.t)
-    transition_table : Instruction.t =
-  List.Assoc.find_exn transition_table ~equal:State.equal (current_state, current_tape_symbol)
+    transition_table : Instruction.t option =
+  List.Assoc.find transition_table ~equal:State.equal (current_state, current_tape_symbol)
 
 
+(** Continuously transition from a current state until the machine halts. *)
 let transition ((_, old_tape, old_head_pos) as old_state : OverallState.t)
     (instruction : Instruction.t) : OverallState.t =
   match instruction with
@@ -98,3 +111,14 @@ let transition ((_, old_tape, old_head_pos) as old_state : OverallState.t)
       ( (new_state, new_symbol)
       , Head.update_tape old_tape old_head_pos new_symbol
       , HeadMovement.move_head old_head_pos head_movement )
+
+
+let rec continuous_transition (current_state : OverallState.t) (transition_table : TransitionTable.t)
+    : OverallState.t =
+  match select_instruction current_state transition_table with
+  | None ->
+      current_state
+  | Some Halt ->
+      current_state
+  | Some (Instruction (_, _, _) as instr) ->
+      continuous_transition (transition current_state instr) transition_table
