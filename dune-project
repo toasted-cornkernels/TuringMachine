@@ -1,26 +1,20 @@
 (lang dune 3.6)
 
-(name turing_machine)
+(name TuringMachine)
 
 (generate_opam_files true)
 
 (source
- (github username/reponame))
+ (github toasted-cornkernels/TuringMachine))
 
-(authors "Author Name")
+(authors "ToastedCornkernels")
 
-(maintainers "Maintainer Name")
+(maintainers "ToastedCornkernels")
 
 (license LICENSE)
 
-(documentation https://url/to/documentation)
-
 (package
- (name turing_machine)
- (synopsis "A short synopsis")
- (description "A longer description")
- (depends ocaml dune)
- (tags
-  (topics "to describe" your project)))
-
-; See the complete stanza docs at https://dune.readthedocs.io/en/stable/dune-files.html#dune-project
+ (name TuringMachine)
+ (synopsis "A Turing machine simulator.")
+ (description "A Turing machine simulator.")
+ (depends ocaml dune utop ocamlgraph yojson))
