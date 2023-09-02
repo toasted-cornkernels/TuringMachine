@@ -141,9 +141,11 @@ module Notebook4 = struct
   let rec continuous_transition (current_state : OverallState.t)
       (transition_table : TransitionTable.t) : OverallState.t =
     match select_instruction current_state transition_table with
-    | Halt ->
+    | None ->
         current_state
-    | Instruction (_, _, _) as instr ->
+    | Some Halt ->
+        current_state
+    | Some (Instruction (_, _, _) as instr) ->
         continuous_transition (transition current_state instr) transition_table
 
 
@@ -198,13 +200,13 @@ end
 module Notebook5 = struct
   let goal = "Add ocamlgraph representation"
 
-  module Vertex : Graph.Sig.COMPARABLE = struct
+  module Vertex = struct
     include MachineState
 
     let hash = Hashtbl.hash
   end
 
-  module EdgeLabel : Graph.Sig.ORDERED_TYPE_DFT = struct
+  module EdgeLabel = struct
     (* The edge label is the pair of (current symbol, new symbol, head movement) *)
     type t = TapeSymbol.t * TapeSymbol.t * HeadMovement.t [@@deriving equal, compare]
 
@@ -216,13 +218,13 @@ module Notebook5 = struct
   let _ = "end"
 end
 
-module Vertex : Graph.Sig.COMPARABLE = struct
+module Vertex = struct
   include MachineState
 
   let hash = Hashtbl.hash
 end
 
-module EdgeLabel : Graph.Sig.ORDERED_TYPE_DFT = struct
+module EdgeLabel = struct
   (* The edge label is the pair of (current symbol, new symbol, head movement) *)
   type t = TapeSymbol.t * TapeSymbol.t * HeadMovement.t [@@deriving equal, compare]
 
